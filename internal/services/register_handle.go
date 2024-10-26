@@ -1,10 +1,13 @@
 package services
 
 import (
+	"cmsProject/internal/dao"
+	"cmsProject/internal/model"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"time"
 )
 
 type RegisterReq struct {
@@ -25,12 +28,40 @@ func (cmsApp *CmsApp) Register(ctx *gin.Context) {
 		})
 		return
 	}
+	// 密码加密
 	hashedPassword, err := encryptPassword(req.Password)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{})
 	}
-	// TODO : 账号校验，是否存在
-	// TODO : 账号密码持久化
+	// 账号校验，是否存在
+	// 获取数据库连接对象
+	db := cmsApp.connDB()
+	// new一个AccountDao的实例对象
+	accountDao := dao.NewAccountDao(db)
+	// 调用AccountDao的方法根据userId查询数据是否存在
+	isExist, err := accountDao.IsExit(req.UserId)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if isExist { // 账号已存在 返回客户端错误码400
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "账号已存在"})
+		return
+	}
+
+	// 账号密码持久化
+	nowTime := time.Now()
+	if err := accountDao.AddUser(model.Account{
+		UserId:    req.UserId,
+		Password:  hashedPassword,
+		Nickname:  req.NickName,
+		CreatedAt: nowTime,
+		UpdatedAt: nowTime,
+	}); err != nil {
+		fmt.Println(nil)
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+
 	fmt.Printf("register info %+v, hassedPassword is [%v]", req, hashedPassword)
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": 0,
