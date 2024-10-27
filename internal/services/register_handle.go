@@ -35,9 +35,8 @@ func (cmsApp *CmsApp) Register(ctx *gin.Context) {
 	}
 	// 账号校验，是否存在
 	// 获取数据库连接对象
-	db := cmsApp.connDB()
 	// new一个AccountDao的实例对象
-	accountDao := dao.NewAccountDao(db)
+	accountDao := dao.NewAccountDao(cmsApp.db)
 	// 调用AccountDao的方法根据userId查询数据是否存在
 	isExist, err := accountDao.IsExit(req.UserId)
 	if err != nil {

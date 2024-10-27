@@ -41,3 +41,21 @@ func (accountDao *AccountDao) AddUser(account model.Account) error {
 	}
 	return nil
 }
+
+// 根据userId查询用户
+func (accountDao *AccountDao) QueryUser(userId string) (*model.Account, error) {
+	var account model.Account
+	err := accountDao.db.Where("user_id = ?", userId).First(&account).Error
+	// 第一种错误是没查询到，返回nil
+	if err == gorm.ErrRecordNotFound {
+		fmt.Println("未查询到用户")
+		return nil, nil
+	}
+	// 第二种错误是其他查询错误，返回err
+	if err != nil {
+		fmt.Printf("query user error: [%v]\n", err)
+		return nil, err
+	}
+	// 没错误 返回account
+	return &account, nil
+}

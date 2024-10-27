@@ -12,7 +12,7 @@ const (
 
 func CmsRouter(r *gin.Engine) {
 	// 创建自定义的中间件对象
-	m := SessionAuth{}
+	m := NewSessionAuth()
 	// 创建路由组
 	root := r.Group(rootPath).Use(m.Auth)
 	// 调用CmsApp的构造函数获取CmsApp实例对象
@@ -29,5 +29,7 @@ func CmsRouter(r *gin.Engine) {
 	{
 		//post方法
 		noAuthRoot.POST("/cms/register", cmsApp.Register)
+		// post方法
+		noAuthRoot.POST("/cms/login", cmsApp.Login)
 	}
 }
